@@ -59,6 +59,7 @@ public class SecurityConfig {
                 "http://localhost:5174",
                 "http://localhost:5175",
                 "https://coaching.techespals.com"
+                "https://techespals.com"
         ));
 
         config.setAllowedMethods(List.of(
