@@ -1,10 +1,11 @@
 package com.techespals.coachingmanager.Coaching.Application.security;
 
-
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -25,7 +26,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+
+        String path = request.getServletPath();
+
+        // CORS preflight request ko allow karo
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Login/Register APIs ko JWT check se skip karo
+        if (path.startsWith("/api/auth/")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -41,6 +52,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String email = jwtService.extractEmail(token);
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
             if (jwtService.isTokenValid(token)) {
