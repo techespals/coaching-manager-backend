@@ -29,14 +29,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        // CORS preflight request ko allow karo
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())
+                || path.equals("/api/auth/login")
+                || path.equals("/api/auth/register")
+                || path.startsWith("/api/auth/")) {
 
-        // Login/Register APIs ko JWT check se skip karo
-        if (path.startsWith("/api/auth/")) {
             filterChain.doFilter(request, response);
             return;
         }
