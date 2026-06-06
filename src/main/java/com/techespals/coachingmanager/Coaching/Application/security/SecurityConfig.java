@@ -3,6 +3,7 @@ package com.techespals.coachingmanager.Coaching.Application.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,17 +28,14 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
 
-                .cors(cors -> {})
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
-
-                        .requestMatchers(
-                                "/api/auth/**"
-                        ).permitAll()
-
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
@@ -59,7 +57,8 @@ public class SecurityConfig {
                 "http://localhost:5174",
                 "http://localhost:5175",
                 "https://coaching.techespals.com",
-                "https://techespals.com"
+                "https://techespals.com",
+                "https://www.techespals.com"
         ));
 
         config.setAllowedMethods(List.of(
@@ -71,7 +70,6 @@ public class SecurityConfig {
         ));
 
         config.setAllowedHeaders(List.of("*"));
-
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
