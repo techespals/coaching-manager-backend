@@ -99,7 +99,13 @@ public class StudentService {
     }
 
     public String deleteStudent(Long id) {
-        studentRepository.deleteById(id);
+        Student student = getStudentById(id);
+
+        userRepository.findByEmail(student.getPhone())
+                .ifPresent(userRepository::delete);
+
+        studentRepository.delete(student);
+
         return "Student deleted successfully";
     }
 
