@@ -1,6 +1,5 @@
 package com.techespals.coachingmanager.Coaching.Application.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,4 +25,8 @@ public class Payment {
 
     @ManyToOne
     private Student student;
+
+    @ManyToOne
+    @JoinColumn(name = "institute_id")
+    private Institute institute;
 }
