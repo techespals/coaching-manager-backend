@@ -25,4 +25,8 @@ public class Batch {
 
     @ManyToOne
     private Course course;
+
+    @ManyToOne
+    @JoinColumn(name = "institute_id")
+    private Institute institute;
 }

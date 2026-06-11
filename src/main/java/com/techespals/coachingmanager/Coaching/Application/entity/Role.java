@@ -1,7 +1,9 @@
 package com.techespals.coachingmanager.Coaching.Application.entity;
 
 
+
 public enum Role {
-    OWNER,
+    SUPER_ADMIN,
+    INSTITUTE_ADMIN,
     STUDENT
 }

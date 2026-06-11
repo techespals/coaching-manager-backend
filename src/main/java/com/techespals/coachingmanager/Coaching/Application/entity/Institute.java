@@ -1,29 +1,31 @@
 package com.techespals.coachingmanager.Coaching.Application.entity;
 
+
+
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
+@Table(name = "institutes")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Course {
+public class Institute {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String courseName;
+    private String instituteName;
 
-    private String description;
+    private String ownerName;
 
-    private Double fees;
+    @Column(unique = true, nullable = false)
+    private String email;
 
-    private String duration;
+    private String phone;
 
-    @ManyToOne
-    @JoinColumn(name = "institute_id")
-    private Institute institute;
+    private Boolean active;
 }

@@ -36,4 +36,8 @@ public class Student {
 
     @ManyToOne
     private Batch batch;
+
+    @ManyToOne
+    @JoinColumn(name = "institute_id")
+    private Institute institute;
 }

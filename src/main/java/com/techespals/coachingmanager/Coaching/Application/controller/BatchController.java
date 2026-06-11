@@ -1,12 +1,12 @@
 package com.techespals.coachingmanager.Coaching.Application.controller;
 
-
-
-
 import com.techespals.coachingmanager.Coaching.Application.entity.Batch;
 import com.techespals.coachingmanager.Coaching.Application.entity.Course;
+import com.techespals.coachingmanager.Coaching.Application.entity.Institute;
+import com.techespals.coachingmanager.Coaching.Application.entity.User;
 import com.techespals.coachingmanager.Coaching.Application.repository.BatchRepository;
 import com.techespals.coachingmanager.Coaching.Application.repository.CourseRepository;
+import com.techespals.coachingmanager.Coaching.Application.service.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,19 +20,28 @@ public class BatchController {
 
     private final BatchRepository batchRepository;
     private final CourseRepository courseRepository;
+    private final CurrentUserService currentUserService;
 
     @PostMapping("/{courseId}")
     public Batch addBatch(@PathVariable Long courseId, @RequestBody Batch batch) {
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+        User currentUser = currentUserService.getCurrentUser();
+        Institute institute = currentUser.getInstitute();
+        Long instituteId = currentUserService.getCurrentInstituteId();
 
+        Course course = courseRepository.findByIdAndInstituteId(courseId, instituteId)
+                .orElseThrow(() -> new RuntimeException("Course not found for this institute"));
+
+        batch.setId(null);
         batch.setCourse(course);
+        batch.setInstitute(institute);
+
         return batchRepository.save(batch);
     }
 
     @GetMapping
     public List<Batch> getBatches() {
-        return batchRepository.findAll();
+        Long instituteId = currentUserService.getCurrentInstituteId();
+        return batchRepository.findByInstituteId(instituteId);
     }
 
     @PutMapping("/{id}/course/{courseId}")
@@ -41,11 +50,13 @@ public class BatchController {
             @PathVariable Long courseId,
             @RequestBody Batch batch
     ) {
-        Batch existing = batchRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Batch not found"));
+        Long instituteId = currentUserService.getCurrentInstituteId();
 
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+        Batch existing = batchRepository.findByIdAndInstituteId(id, instituteId)
+                .orElseThrow(() -> new RuntimeException("Batch not found for this institute"));
+
+        Course course = courseRepository.findByIdAndInstituteId(courseId, instituteId)
+                .orElseThrow(() -> new RuntimeException("Course not found for this institute"));
 
         existing.setBatchName(batch.getBatchName());
         existing.setTiming(batch.getTiming());
@@ -58,7 +69,13 @@ public class BatchController {
 
     @DeleteMapping("/{id}")
     public String deleteBatch(@PathVariable Long id) {
-        batchRepository.deleteById(id);
+        Long instituteId = currentUserService.getCurrentInstituteId();
+
+        Batch existing = batchRepository.findByIdAndInstituteId(id, instituteId)
+                .orElseThrow(() -> new RuntimeException("Batch not found for this institute"));
+
+        batchRepository.delete(existing);
+
         return "Batch deleted successfully";
     }
 }

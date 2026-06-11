@@ -5,6 +5,7 @@ import com.techespals.coachingmanager.Coaching.Application.entity.Student;
 import com.techespals.coachingmanager.Coaching.Application.entity.User;
 import com.techespals.coachingmanager.Coaching.Application.repository.StudentRepository;
 import com.techespals.coachingmanager.Coaching.Application.repository.UserRepository;
+import com.techespals.coachingmanager.Coaching.Application.service.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -18,24 +19,31 @@ public class StudentAccountController {
     private final UserRepository userRepository;
     private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CurrentUserService currentUserService;
 
-    @GetMapping("/profile/{phone}")
-    public Student getStudentProfile(@PathVariable String phone) {
-        return studentRepository.findByPhone(phone)
+    @GetMapping("/profile")
+    public Student getStudentProfile() {
+        User currentUser = currentUserService.getCurrentUser();
+
+        Long instituteId = currentUser.getInstitute().getId();
+
+        return studentRepository.findByPhoneAndInstituteId(
+                        currentUser.getEmail(),
+                        instituteId
+                )
                 .orElseThrow(() -> new RuntimeException("Student not found"));
     }
 
     @PutMapping("/change-password")
     public String changePassword(@RequestBody ChangePasswordRequest request) {
-        User user = userRepository.findByEmail(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User currentUser = currentUserService.getCurrentUser();
 
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.getCurrentPassword(), currentUser.getPassword())) {
             throw new RuntimeException("Current password is wrong");
         }
 
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
+        currentUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(currentUser);
 
         return "Password changed successfully";
     }

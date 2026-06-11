@@ -11,7 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,14 +23,19 @@ public class StudentService {
     private final BatchRepository batchRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CurrentUserService currentUserService;
 
     public Student addStudent(StudentRequest request) {
 
-        Course course = courseRepository.findById(request.getCourseId())
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+        User currentUser = currentUserService.getCurrentUser();
+        Long instituteId = currentUserService.getCurrentInstituteId();
+        Institute institute = currentUser.getInstitute();
 
-        Batch batch = batchRepository.findById(request.getBatchId())
-                .orElseThrow(() -> new RuntimeException("Batch not found"));
+        Course course = courseRepository.findByIdAndInstituteId(request.getCourseId(), instituteId)
+                .orElseThrow(() -> new RuntimeException("Course not found for this institute"));
+
+        Batch batch = batchRepository.findByIdAndInstituteId(request.getBatchId(), instituteId)
+                .orElseThrow(() -> new RuntimeException("Batch not found for this institute"));
 
         double remaining = request.getTotalFees() - request.getPaidFees();
 
@@ -45,6 +51,7 @@ public class StudentService {
                 .joiningDate(LocalDate.now())
                 .course(course)
                 .batch(batch)
+                .institute(institute)
                 .build();
 
         Student savedStudent = studentRepository.save(student);
@@ -55,6 +62,7 @@ public class StudentService {
                     .email(request.getPhone())
                     .password(passwordEncoder.encode("123456"))
                     .role(Role.STUDENT)
+                    .institute(institute)
                     .build();
 
             userRepository.save(user);
@@ -64,23 +72,28 @@ public class StudentService {
     }
 
     public List<Student> getAllStudents() {
-        return studentRepository.findAll();
+        Long instituteId = currentUserService.getCurrentInstituteId();
+        return studentRepository.findByInstituteId(instituteId);
     }
 
     public Student getStudentById(Long id) {
-        return studentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Long instituteId = currentUserService.getCurrentInstituteId();
+
+        return studentRepository.findByIdAndInstituteId(id, instituteId)
+                .orElseThrow(() -> new RuntimeException("Student not found for this institute"));
     }
 
     public Student updateStudent(Long id, StudentRequest request) {
 
+        Long instituteId = currentUserService.getCurrentInstituteId();
+
         Student student = getStudentById(id);
 
-        Course course = courseRepository.findById(request.getCourseId())
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+        Course course = courseRepository.findByIdAndInstituteId(request.getCourseId(), instituteId)
+                .orElseThrow(() -> new RuntimeException("Course not found for this institute"));
 
-        Batch batch = batchRepository.findById(request.getBatchId())
-                .orElseThrow(() -> new RuntimeException("Batch not found"));
+        Batch batch = batchRepository.findByIdAndInstituteId(request.getBatchId(), instituteId)
+                .orElseThrow(() -> new RuntimeException("Batch not found for this institute"));
 
         double remaining = request.getTotalFees() - request.getPaidFees();
 
@@ -110,21 +123,23 @@ public class StudentService {
     }
 
     public List<Student> getUnpaidStudents() {
-        return studentRepository.findByFeeStatus(FeeStatus.UNPAID);
+        Long instituteId = currentUserService.getCurrentInstituteId();
+        return studentRepository.findByFeeStatusAndInstituteId(FeeStatus.UNPAID, instituteId);
     }
 
     public List<Student> getPartialFeeStudents() {
-        return studentRepository.findByFeeStatus(FeeStatus.PARTIAL);
+        Long instituteId = currentUserService.getCurrentInstituteId();
+        return studentRepository.findByFeeStatusAndInstituteId(FeeStatus.PARTIAL, instituteId);
     }
 
     public List<Student> sortByName() {
-        List<Student> students = studentRepository.findAll();
+        List<Student> students = getAllStudents();
         students.sort(Comparator.comparing(Student::getName));
         return students;
     }
 
     public List<Student> sortByRemainingFees() {
-        List<Student> students = studentRepository.findAll();
+        List<Student> students = getAllStudents();
         students.sort(Comparator.comparing(Student::getRemainingFees).reversed());
         return students;
     }

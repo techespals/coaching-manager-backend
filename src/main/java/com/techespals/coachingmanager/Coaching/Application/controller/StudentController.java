@@ -2,7 +2,6 @@ package com.techespals.coachingmanager.Coaching.Application.controller;
 
 import com.techespals.coachingmanager.Coaching.Application.dto.StudentRequest;
 import com.techespals.coachingmanager.Coaching.Application.entity.Student;
-import com.techespals.coachingmanager.Coaching.Application.repository.StudentRepository;
 import com.techespals.coachingmanager.Coaching.Application.service.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +15,6 @@ import java.util.List;
 public class StudentController {
 
     private final StudentService studentService;
-    private final StudentRepository studentRepository;
 
     @PostMapping
     public Student addStudent(@RequestBody StudentRequest request) {
@@ -65,13 +63,4 @@ public class StudentController {
     public List<Student> sortByRemainingFees() {
         return studentService.sortByRemainingFees();
     }
-
-
-
-
-
-
-
-
-
 }
