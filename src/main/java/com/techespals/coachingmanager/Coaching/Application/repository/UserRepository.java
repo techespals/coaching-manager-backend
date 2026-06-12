@@ -1,5 +1,6 @@
 package com.techespals.coachingmanager.Coaching.Application.repository;
 
+import com.techespals.coachingmanager.Coaching.Application.entity.Role;
 import com.techespals.coachingmanager.Coaching.Application.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -10,4 +11,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
     boolean existsByEmail(String email);
+
+    long countByRole(Role role);
 }
