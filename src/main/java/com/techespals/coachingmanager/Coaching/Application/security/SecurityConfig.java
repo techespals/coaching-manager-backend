@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/super-admin/**").hasAuthority("ROLE_SUPER_ADMIN")
                         .requestMatchers("/api/owner/**").hasAuthority("ROLE_INSTITUTE_ADMIN")
                         .requestMatchers("/api/student/**").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers("/api/auth/create-super-admins").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
 
                         .anyRequest().authenticated()
