@@ -22,6 +22,8 @@ public class Student {
     private String phone;
     private String parentPhone;
 
+    private String photoUrl;
+
     private Double totalFees;
     private Double paidFees;
     private Double remainingFees;

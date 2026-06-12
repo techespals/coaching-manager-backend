@@ -1,7 +1,4 @@
 package com.techespals.coachingmanager.Coaching.Application.service;
-
-
-
 import com.techespals.coachingmanager.Coaching.Application.entity.User;
 import com.techespals.coachingmanager.Coaching.Application.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

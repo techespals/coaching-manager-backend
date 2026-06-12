@@ -36,13 +36,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/register").denyAll()
 
-                        // Public register band
-//                        .requestMatchers("/api/auth/register").denyAll()
-                        .requestMatchers("/api/auth/register").permitAll()
-
-                        // Sirf SUPER_ADMIN ke liye
-                                .requestMatchers("/api/super-admin/**").hasAuthority("ROLE_SUPER_ADMIN")
+                        .requestMatchers("/api/super-admin/**").hasAuthority("ROLE_SUPER_ADMIN")
+                        .requestMatchers("/api/owner/**").hasAuthority("ROLE_INSTITUTE_ADMIN")
+                        .requestMatchers("/api/student/**").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers("/uploads/**").permitAll()
 
                         .anyRequest().authenticated()
                 )

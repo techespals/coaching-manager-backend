@@ -9,10 +9,15 @@ import com.techespals.coachingmanager.Coaching.Application.repository.UserReposi
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -111,6 +116,50 @@ public class StudentService {
         return studentRepository.save(student);
     }
 
+    public Student uploadStudentPhoto(Long studentId, MultipartFile file) {
+        try {
+            Student student = getStudentById(studentId);
+
+            if (file.isEmpty()) {
+                throw new RuntimeException("Photo file is empty");
+            }
+
+            String contentType = file.getContentType();
+
+            if (contentType == null || !contentType.startsWith("image/")) {
+                throw new RuntimeException("Only image files are allowed");
+            }
+
+            String originalFileName = file.getOriginalFilename();
+            String extension = "";
+
+            if (originalFileName != null && originalFileName.contains(".")) {
+                extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+            }
+
+            String fileName = "student-" + studentId + "-" + UUID.randomUUID() + extension;
+
+            Path uploadPath = Paths.get("uploads/student-photos");
+
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            Path filePath = uploadPath.resolve(fileName);
+
+            Files.copy(file.getInputStream(), filePath);
+
+            String photoUrl = "/uploads/student-photos/" + fileName;
+
+            student.setPhotoUrl(photoUrl);
+
+            return studentRepository.save(student);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload student photo: " + e.getMessage());
+        }
+    }
+
     public String deleteStudent(Long id) {
         Student student = getStudentById(id);
 
@@ -148,5 +197,9 @@ public class StudentService {
         if (paidFees == 0) return FeeStatus.UNPAID;
         if (paidFees < totalFees) return FeeStatus.PARTIAL;
         return FeeStatus.PAID;
+    }
+
+    public List<Student> getAllStudentsByInstitute(Long instituteId) {
+        return studentRepository.findByInstituteId(instituteId);
     }
 }

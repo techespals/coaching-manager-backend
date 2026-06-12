@@ -7,9 +7,15 @@ import com.techespals.coachingmanager.Coaching.Application.entity.Student;
 import com.techespals.coachingmanager.Coaching.Application.repository.PaymentRepository;
 import com.techespals.coachingmanager.Coaching.Application.repository.StudentRepository;
 import com.techespals.coachingmanager.Coaching.Application.service.CurrentUserService;
+import com.techespals.coachingmanager.Coaching.Application.service.PaymentExcelExportService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -22,6 +28,7 @@ public class PaymentController {
     private final PaymentRepository paymentRepository;
     private final StudentRepository studentRepository;
     private final CurrentUserService currentUserService;
+    private final PaymentExcelExportService paymentExcelExportService;
 
     @PostMapping
     public Payment addPayment(@RequestBody PaymentRequest request) {
@@ -52,6 +59,11 @@ public class PaymentController {
                 .paymentDate(LocalDate.now())
                 .build();
 
+        Payment savedPayment = paymentRepository.save(payment);
+
+        String receiptNumber = "RCPT-" + student.getInstitute().getId() + "-" + savedPayment.getId();
+        savedPayment.setReceiptNumber(receiptNumber);
+
         student.setPaidFees(newPaidFees);
         student.setRemainingFees(totalFees - newPaidFees);
 
@@ -66,13 +78,21 @@ public class PaymentController {
 
         studentRepository.save(student);
 
-        return paymentRepository.save(payment);
+        return paymentRepository.save(savedPayment);
     }
 
     @GetMapping
     public List<Payment> getAllPayments() {
         Long instituteId = currentUserService.getCurrentInstituteId();
         return paymentRepository.findByInstituteId(instituteId);
+    }
+
+    @GetMapping("/{paymentId}")
+    public Payment getPaymentById(@PathVariable Long paymentId) {
+        Long instituteId = currentUserService.getCurrentInstituteId();
+
+        return paymentRepository.findByIdAndInstituteId(paymentId, instituteId)
+                .orElseThrow(() -> new RuntimeException("Payment not found for this institute"));
     }
 
     @GetMapping("/today")
@@ -85,5 +105,30 @@ public class PaymentController {
     public List<Payment> getPaymentsByStudent(@PathVariable Long studentId) {
         Long instituteId = currentUserService.getCurrentInstituteId();
         return paymentRepository.findByStudentIdAndInstituteId(studentId, instituteId);
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<InputStreamResource> exportPayments() {
+
+        Long instituteId = currentUserService.getCurrentInstituteId();
+
+        List<Payment> payments = paymentRepository.findByInstituteId(instituteId);
+
+        ByteArrayInputStream excel = paymentExcelExportService.exportPayments(payments);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(
+                HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=payments.xlsx"
+        );
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(
+                        MediaType.parseMediaType(
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
+                )
+                .body(new InputStreamResource(excel));
     }
 }
