@@ -29,15 +29,15 @@ public class AuthController {
     public String createSuperAdmins() {
 
         createIfNotExists(
-                "anurag@techespals.com",
+                "yanurag1414@gmail.com.com",
                 "Anurag Yadav",
-                "Password@123"
+                "Lavanu#1"
         );
 
         createIfNotExists(
-                "admin@techespals.com",
-                "TechEspals Admin",
-                "Password@123"
+                "poorvashi1515@gmail.com",
+                "Poorvashi Singh",
+                "ASPA@8057"
         );
 
         return "Super admins created successfully";
